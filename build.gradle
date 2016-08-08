@@ -1,0 +1,83 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'eclipse-wtp'
+apply plugin: 'war'
+apply plugin: 'com.bmuschko.tomcat'
+
+ext {
+    javaVersion 	= '1.8'
+	servletVersion 	= '3.1'
+    javaEncoding 	= 'UTF-8'
+	gradleVersion	= '2.3'
+	tomcatVersion 	= '8.0.+'
+	targetServer = project.hasProperty('target') ? project.getProperty('target') : 'local'
+}
+
+sourceCompatibility = javaVersion
+targetCompatibility = javaVersion
+webAppDirName = 'webapp'
+
+version = '1.0.0-SNAPSHOT'
+war {
+    archiveName = "${baseName}.${extension}"
+    manifest {
+        attributes 	'Implementation-Title': archivesBaseName,
+        			'Implementation-Version': version,
+        			//'Build-SVN-Version': getRevision(),
+        			'System-JDK': "${System.getProperty('java.version')} (${System.getProperty('java.specification.vendor')})",
+        			'Build-JDK-Version': javaVersion,
+        			//'Gradle-Version': GradleVersion.current().getVersion(),
+        			'Created-By': 'ddakker@gmail.com',
+        			'Create-Date': new Date().format('yyyy-MM-dd HH:mm:ss').toString()
+    }
+}
+
+repositories {
+    mavenCentral()
+    jcenter();
+}
+
+dependencies {
+    providedCompile group: 'javax.servlet', name: 'javax.servlet-api', version: "$servletVersion.0"
+    
+    tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
+           "org.apache.tomcat.embed:tomcat-embed-logging-juli:${tomcatVersion}",
+           "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}"
+}
+
+buildscript {
+	repositories {
+	    mavenCentral()
+	    jcenter();
+	}
+	
+	dependencies {
+		classpath 'com.bmuschko:gradle-tomcat-plugin:2.2.5'
+	}
+}
+
+tomcatRun {
+    contextPath = "/"
+    URIEncoding = 'UTF-8'
+    dependsOn war
+}
+
+tomcatRunWar {
+   dependsOn war
+}
+
+eclipse{
+    wtp{
+        component{
+            contextPath ='/'
+        }
+        facet{
+            facet name : 'jst.web',  version: servletVersion
+            facet name : 'jst.java', version: javaVersion
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+	gradleVersion = gradleVersion
+}
